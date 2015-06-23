@@ -1,0 +1,199 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Scanner;
+
+//first arg list to be segmented
+public class BasicLookup {
+
+    public static void main(String[] args) {
+
+        try {
+            String file = args[0];
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line = br.readLine();
+	    int count = 0;
+
+            while (line != null) {
+		//process lines
+		String capSegmentation = concatSingletons(segmentByCaps(line));
+		String[] split = capSegmentation.split(" ");
+		String segmentation = "";
+
+		for (int i=0; i<split.length; i++) {
+		    String forwards = concatSingletons(ASM(1,1,1,split[i]));
+		    String backwards = concatSingletons(ASM(-1,1,1,split[i]));
+		    String merge = merge(forwards,backwards);
+		    segmentation += merge + " ";
+		}
+		
+		System.out.println(chomp(segmentation));
+		line = br.readLine();
+		count++;
+            }
+
+        } catch (FileNotFoundException ex) {
+        } catch (IOException ex) {
+        }
+    }
+
+    //segment by capitals
+    public static String segmentByCaps(String s) {
+	String output = "";
+	for (int i=0; i<s.length(); i++) {
+	    char c = s.charAt(i);
+	    if (Character.isUpperCase(c)) {output += " "+c;}
+	    else {output += c;}
+	}
+	return chomp(output);
+    }
+    
+    //merges forward and backward segmentations based on avg word length
+    public static String merge(String a, String b) {
+
+	if (a.equals(b)) {return a;}
+	else {
+	    if (averageWordLength(a) > averageWordLength(b)) {return a;}
+	    else {return b;}
+	}
+
+    }
+
+    //basic table lookup, d direction of scan, m max or min, a unused right now
+    public static String ASM(int d, int a, int m, String s) {
+
+	int len = s.length();
+	String seg = "";
+	boolean unknown = true;
+
+	for (int i=0; i<len && unknown; i++) {
+	    String front;
+	    String back;
+	    if (d==1) {
+		front = s.substring(0,len-i);
+		back = s.substring(len-i);
+	    } else {
+		front = s.substring(0,i);
+		back = s.substring(i);
+	    }
+	    if (m==1 && d==1 || m==-1 && d==-1) {
+		if (hasMatch(front)) {
+		    unknown = false;
+		    seg = seg + front + " " + ASM(d,a,m,back);
+		}
+	    } else {
+		if (hasMatch(back)) {
+		    unknown = false;
+		    seg = ASM(d,a,m,front) + " " + back + seg;
+		}
+	    }
+	}
+	if (unknown) {return s;}
+	else {return chomp(seg);}
+    }
+
+    //goes through segmentation and concats neighboring single letters, assuming unknown abbrev
+    public static String concatSingletons(String s) {
+	String[] words = s.split(" ");
+	String output = "";
+	String concat = "";
+	for (int i=0; i<words.length; i++) {
+	    if (words[i].length()>1) {
+		if (concat.equals("")) {output += words[i] + " ";}
+		else {output += concat + " " + words[i] + " ";}
+		concat = "";
+	    } else {
+		concat += words[i];
+	    }
+	}
+	return chomp(output+concat);
+    }
+
+    //table lookup
+    public static boolean hasMatch(String s) {
+	if (isInteger(s)) {return true;}
+	//else if (s.length()==1) {return true;}
+	else {
+	    int len = s.length();
+	    boolean has = false;
+
+	    try {
+
+		String file = "../dicts/total/try3/split/t"+len+".txt";
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		String line = br.readLine();
+		int count = 0;
+		boolean done = false;
+		while (line != null && !done) {
+		    //process lines
+
+		    if (s.toLowerCase().equals(line.toLowerCase())) {
+			done = true;
+			has = true;
+		    }
+
+		    line = br.readLine();
+		    count++;
+		}
+	    } catch (FileNotFoundException ex) {
+		has = false;
+	    } catch (IOException ex) {
+		has = false;
+	    }
+	
+	    return has;
+	}
+    }
+
+    //HELPER FUNCTIONS//
+    //------------------------------------------------------------------------------//
+
+    //checks if string is integer
+    public static boolean isInteger(String s) {
+	return isInteger(s,10);
+    }
+
+    public static boolean isInteger(String s, int radix) {
+	if(s.isEmpty()) return false;
+	for(int i = 0; i < s.length(); i++) {
+	    if(i == 0 && s.charAt(i) == '-') {
+		if(s.length() == 1) return false;
+		else continue;
+	    }
+	    if(Character.digit(s.charAt(i),radix) < 0) return false;
+	}
+	return true;
+    }
+
+    //removes " " from front and back of string if exists
+    public static String chomp(String s) {
+	int l = s.length();
+	if (l>1 && s.charAt(0)==' ') {s = s.substring(1); l = l-1;}
+	if (l>1 && s.charAt(l-1)==' ') {s = s.substring(0,l-1);}
+	if (s.equals(" ")) {s = "";}
+	return s;
+    }
+    
+    //converts segmentation to bin representation
+    public static String toBin(String s) {
+	String bin = "";
+	int i=0;
+	while (i<s.length()-1) {
+	    if (s.charAt(i+1)==' ') {bin+="1"; i+=2;}
+	    else {bin+="0"; i++;}
+	}
+	return bin;
+    }
+
+    //gets avg word length in segmentation
+    public static double averageWordLength(String a) {
+	String[] words = a.split(" ");
+	double sum = 0.0;
+	for (int i=0; i<words.length; i++) {
+	    sum += words[i].length();
+	}
+
+	return sum / words.length;
+    }
+}

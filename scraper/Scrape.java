@@ -1,0 +1,59 @@
+import java.net.URL;
+import java.net.URLConnection;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements; 
+
+public class Scrape {
+
+    public static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    public static final String URLSTART = "http://twubs.com/p/hashtag-directory?startsWith=";
+    public static final String URLEND = "&page=";
+  
+    public static void main(String[] args) throws Exception {
+    
+	for (int letterIndex = 0; letterIndex < 26; letterIndex++) {
+	    URL twubs = new URL(URLSTART+ALPHABET.charAt(letterIndex)+URLEND+"1");
+	    //URL twubs = new URL(URLSTART+args[0]+URLEND+"1");
+	    URLConnection tc = twubs.openConnection();
+	    BufferedReader in = new BufferedReader(new InputStreamReader(tc.getInputStream()));
+	    String html = "";
+	    String line = in.readLine();
+	    while (line != null) {
+		html += line;
+		line = in.readLine();
+	    }
+	    Document doc = Jsoup.parse(html);
+	    int pageCount = Integer.parseInt(doc.select(".pagination li").last().text());
+	    in.close();
+      
+	    for (int page = 1; page < pageCount; page++) {
+
+		twubs = new URL(URLSTART+ALPHABET.charAt(letterIndex)+URLEND+page);
+		//twubs = new URL(URLSTART+args[0]+URLEND+page);
+		tc = twubs.openConnection();
+		in = new BufferedReader(new InputStreamReader(tc.getInputStream()));
+		html = "";
+		line = in.readLine();
+
+		while (line != null) {
+		    html += line;
+		    line = in.readLine();
+		}
+
+		doc = Jsoup.parse(html);
+		Elements hashtags = doc.select(".card.shaded p");
+
+		for (Element ht : hashtags) {
+		    System.out.print(ht.text()+",");
+		}
+
+		in.close();
+	    }
+	}
+    }
+}

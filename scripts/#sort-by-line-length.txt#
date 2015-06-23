@@ -1,0 +1,2 @@
+awk '{ print length($0) "QXQXQ" " " $0; }' $file | sort -r t
+for i in {1..n}; do grep ${i}"QXQXQ" total.txt | cut -d ' ' -f 2- > split/t${i}.txt; done

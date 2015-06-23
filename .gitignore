@@ -1,0 +1,6 @@
+apache-ant-1.9.5/
+apache-maven-3.3.3/
+latex/
+raw_data/
+sqlite/*.db
+hashtags/
