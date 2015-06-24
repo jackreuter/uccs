@@ -348,7 +348,7 @@ public class TestMEMM extends TestCase {
 
 	  private void writeObject(ObjectOutputStream out) throws IOException
 	  {
-	    out.writeInt(CURRENT_SERIAL_VERSION);
+o	    out.writeInt(CURRENT_SERIAL_VERSION);
 	  }
 
 

@@ -1,12 +1,38 @@
 //just trying to figure out mallet
 
-import cc.mallet.types.InstanceList;
+import cc.mallet.types.*;
 import cc.mallet.fst.*;
 import cc.mallet.optimize.*;
+import cc.mallet.pipe.*;
+import cc.mallet.pipe.iterator.*;
+import cc.mallet.util.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.regex.*;
+import java.util.zip.*;
+
 
 public class Mallet {
 
-    public void run (InstanceList trainingData, InstanceList testingData) {
+    public static void main(String[] args) throws IOException {
+
+        run(args[0],args[1]);
+
+    }
+        
+    public static void run (String trainingFilename, String testingFilename) throws IOException {
+        ArrayList<Pipe> pipes = new ArrayList<Pipe>();
+        pipes.add(new SimpleTaggerSentence2TokenSequence());
+        pipes.add(new TokenSequence2FeatureSequence());
+        Pipe pipe = new SerialPipes(pipes);
+        
+        InstanceList trainingData = new InstanceList(pipe);
+        InstanceList testingData = new InstanceList(pipe);
+
+        trainingData.addThruPipe(new LineGroupIterator(new BufferedReader(new FileReader(trainingFilename)), Pattern.compile("^\\s*$"), true));
+        testingData.addThruPipe(new LineGroupIterator(new BufferedReader(new FileReader(testingFilename)), Pattern.compile("^\\s*$"), true));
+        
         // setup:
         //    CRF (model) and the state machine
         //    CRFOptimizableBy* objects (terms in the objective function)

@@ -375,7 +375,8 @@ def addtodict(s):
 #checks whether all words in seg are legit
 def checksout(seg):
     checksout = True
-    for word in seg:
+    words = seg.split(" ")
+    for word in words:
         if not hasmatch(word):
             if tweetfreq(word)>1:
                 addtodict(word)
